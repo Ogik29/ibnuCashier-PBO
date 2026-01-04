@@ -5,7 +5,7 @@
 package controller;
 
 import model.*;
-import connection.KoneksiDB;
+import config.DatabaseConnection;
 import java.io.IOException;
 import java.sql.*;
 import javax.servlet.ServletException;
@@ -25,7 +25,7 @@ public class AuthServlet extends HttpServlet {
             String u = req.getParameter("username");
             String p = req.getParameter("password");
             
-            try (Connection conn = KoneksiDB.getKoneksi()) {
+            try (Connection conn = DatabaseConnection.getKoneksi()) {
                 String sql = "SELECT * FROM users WHERE username = ? AND password_hash = ?";
                 PreparedStatement ps = conn.prepareStatement(sql);
                 ps.setString(1, u);

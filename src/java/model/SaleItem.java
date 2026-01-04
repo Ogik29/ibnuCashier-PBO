@@ -12,38 +12,36 @@ public class SaleItem {
     private int produkID;
     private int qty;
     private double hargaSatuan;
-    
-    // Helper untuk view (Aggregation dari Produk)
-    private Produk produkRef; 
+    private Product product; 
 
-    public SaleItem(Produk produk, int qty) {
-        this.produkRef = produk;
-        this.produkID = produk.getProdukID();
+    public SaleItem(Product p, int qty) {
+        this.product = p;
+        this.produkID = p.getProdukID();
+        this.hargaSatuan = p.getHargaJual();
         this.qty = qty;
-        this.hargaSatuan = produk.getHargaJual();
     }
 
     public double getSubtotal() {
-        return hargaSatuan * qty;
+        return this.qty * this.hargaSatuan;
     }
     
-    public void setProdukID(int produkID) { 
-        this.produkID = produkID; 
-    }
-    
-    public void setQty(int qty) { 
-        this.qty = qty; 
-    }
-    
-    public void setSubtotal(double subtotal) { 
-        // perhitungan di servlet
+    public int getProdukID() { 
+        return produkID; 
     }
     
     public int getQty() { 
         return qty; 
     }
     
-    public Produk getProdukRef() { 
-        return produkRef; 
+    public void setQty(int qty) { 
+        this.qty = qty; 
+    }
+    
+    public double getHargaSatuan() { 
+        return hargaSatuan; 
+    }
+    
+    public Product getProduct() { 
+        return product; 
     }
 }

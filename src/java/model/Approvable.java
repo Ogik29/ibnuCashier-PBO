@@ -8,8 +8,9 @@ package model;
  *
  * @author dimas
  */
+
 public interface Approvable {
-    public boolean approve(Admin admin);
-    public boolean reject(Admin admin);
-    public String getStatus();
+    boolean approve(Admin admin);
+    boolean reject(Admin admin);
+    String getStatus();
 }

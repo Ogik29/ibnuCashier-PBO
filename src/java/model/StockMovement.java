@@ -8,41 +8,25 @@ package model;
  *
  * @author dimas
  */
-import java.util.Date;
+import java.sql.Timestamp;
 
 public class StockMovement {
     private int movementID;
     private int produkID;
-    private Date waktu;
+    private Timestamp waktu;
     private String tipeMutasi;
     private int qtyChange;
     private String referensiID;
     private int userID;
 
-    public static StockMovement create(int produkID, String tipe, int qty, String ref, int user) {
+    public static StockMovement create(int prodID, String tipe, int qty, String ref, int uid) {
         StockMovement sm = new StockMovement();
-        sm.produkID = produkID;
+        sm.produkID = prodID;
         sm.tipeMutasi = tipe;
         sm.qtyChange = qty;
         sm.referensiID = ref;
-        sm.userID = user;
-        sm.waktu = new Date();
+        sm.userID = uid;
+        sm.waktu = new Timestamp(System.currentTimeMillis());
         return sm;
-    }
-    
-    public void setTipe(String tipe) { 
-        this.tipeMutasi = tipe; 
-    }
-    
-    public void setQty(int qty) { 
-        this.qtyChange = qty; 
-    }
-    
-    public void setReferensiID(String referensiID) { 
-        this.referensiID = referensiID; 
-    }
-    
-    public void setUserID(int userID) { 
-        this.userID = userID; 
     }
 }

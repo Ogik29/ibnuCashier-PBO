@@ -2,13 +2,13 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package connection;
+package config;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 
-public class KoneksiDB {
-    public static Connection getKoneksi() {
+public class DatabaseConnection {
+    public static Connection getConnection() {
         Connection conn = null;
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");

@@ -8,28 +8,32 @@ package model;
  *
  * @author dimas
  */
+
 import java.util.Arrays;
 import java.util.List;
 
 public class Admin extends User {
-    public Admin(int userID, String username, boolean isActive) {
-        super(userID, username, "ADMIN", isActive);
+
+    public Admin(int userID, String username, String passwordHash, boolean isActive) {
+        super(userID, username, passwordHash, "ADMIN", isActive);
     }
 
-    public boolean kelolaPengguna(User pengguna, String aksi) { 
+    public boolean kelolaPengguna(User pengguna, String aksi) {
+        // Logic manipulasi object
         return true; 
     }
-    
-    public boolean kelolaProduk(Produk produk, String aksi) { 
+
+    public boolean kelolaProduk(Product produk, String aksi) {
         return true; 
     }
-    
-    public boolean voidSale(int transaksiID) { 
+
+    public boolean voidSale(int transaksiID) {
+        // Akan memanggil TransactionDAO.void()
         return true; 
     }
 
     @Override
     public List<String> getMenu(int userID) {
-        return Arrays.asList("Kelola Pengguna", "Master Produk", "Laporan");
+        return Arrays.asList("Dashboard", "Kelola Produk", "Kelola User", "Approve Stok", "Laporan");
     }
 }

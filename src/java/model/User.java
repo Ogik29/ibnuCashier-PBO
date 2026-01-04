@@ -3,41 +3,37 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package model;
+import java.util.List;
 
 /**
  *
  * @author dimas
  */
 
-// Abstraction: User tidak bisa dibuat objeknya, harus lewat child (Kasir/Admin)
-import java.util.List;
-
 public abstract class User {
     protected int userID;
     protected String username;
-    protected String passwordHash;
+    private String passwordHash;
     protected String role;
     protected boolean isActive;
 
-    public User(int userID, String username, String role, boolean isActive) {
+    public User(int userID, String username, String passwordHash, String role, boolean isActive) {
         this.userID = userID;
         this.username = username;
+        this.passwordHash = passwordHash;
         this.role = role;
         this.isActive = isActive;
     }
 
     public boolean login(String username, String password) {
-        // representasi behavior objek
-        return this.username.equals(username); 
+        return this.username.equals(username) && this.passwordHash.equals(password);
     }
     
-    public void logout() {
-        // Logic cleanup session ada di Servlet
-    }
+//    public void logout() { /* Logic logout handle session */ }
     
-    // Abstract method untuk ambil menu sesuai role
     public abstract List<String> getMenu(int userID);
 
+    // Getters & Setters
     public int getUserID() { 
         return userID; 
     }
@@ -46,19 +42,11 @@ public abstract class User {
         return username; 
     }
     
+    public String getPasswordHash() { 
+        return passwordHash; 
+    }
+    
     public String getRole() { 
         return role; 
-    }
-    
-    public void setUsername(String username) { 
-        this.username = username; 
-    }
-    
-    public void setPasswordHash(String passwordHash) { 
-        this.passwordHash = passwordHash; 
-    }
-    
-    public void setRole(String role) { 
-        this.role = role; 
     }
 }
