@@ -4,13 +4,19 @@
  */
 package controller;
 
-import dao.*;
-import model.*;
+import dao.ProductDAO;
+import dao.StockOpnamDAO;
+import model.Kasir;
+import model.StockOpnamItem;
+import model.User;
+import model.Product;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @WebServlet("/opnam")
 public class StockOpnamServlet extends HttpServlet {
@@ -22,38 +28,41 @@ public class StockOpnamServlet extends HttpServlet {
         User user = (User) session.getAttribute("user");
         String action = req.getParameter("action");
 
-        if("create_draft".equals(action) && user instanceof Kasir) {
-            // Logika Sederhana: Input ID dan Qty Fisik dipisah koma atau form loop
-            // Ini contoh menerima input hidden utk simulasi
-            String[] skus = req.getParameterValues("sku");
-            String[] qtys = req.getParameterValues("qty");
+        // CREATE DRAFT (Kasir)
+        if("create_draft".equals(action)) {
+            if(!(user instanceof Kasir)) { resp.sendRedirect("index.jsp"); return; }
             
-            if(skus != null) {
+            String sku = req.getParameter("sku");
+            int qty = Integer.parseInt(req.getParameter("qty"));
+            
+            Product p = pDao.getBySku(sku);
+            if(p != null) {
                 List<StockOpnamItem> items = new ArrayList<>();
-                for(int i = 0; i < skus.length; i++) {
-                    Product p = pDao.getBySku(skus[i]);
-                    if(p != null) {
-                        StockOpnamItem item = new StockOpnamItem();
-                        item.setProdukID(p.getProdukID());
-                        item.setQtyFisik(Integer.parseInt(qtys[i]));
-                        item.setQtySistem(p.getStok()); // Kunci stok sistem saat ini
-                        items.add(item);
-                    }
-                }
+                StockOpnamItem item = new StockOpnamItem();
+                item.setProdukID(p.getProdukID());
+                item.setQtyFisik(qty);
+                items.add(item);
+                
                 dao.createDraft(user.getUserID(), items);
-            }
-            resp.sendRedirect("pos.jsp?msg=draft_created");
-
-        } else if("approve_post".equals(action) && user instanceof Admin) {
-            int opnamID = Integer.parseInt(req.getParameter("id"));
-            // Admin flow: Approve, Lalu Post Changes
-            boolean approved = dao.approve(opnamID, user.getUserID());
-            if(approved) {
-                dao.postOpnam(opnamID, user.getUserID());
-                resp.sendRedirect("dashboard-admin.jsp?msg=posted");
+                resp.sendRedirect("pos.jsp?msg=opnam_ok");
             } else {
-                resp.sendRedirect("dashboard-admin.jsp?msg=failed");
+                resp.sendRedirect("pos.jsp?msg=opnam_fail");
             }
+        } 
+        
+        // ADMIN ACTIONS
+        else if(user != null && "ADMIN".equals(user.getRole())) {
+             int opnamID = Integer.parseInt(req.getParameter("id"));
+
+             if("approve".equals(action)) {
+                 boolean success = dao.approveAndPost(opnamID, user.getUserID());
+                 resp.sendRedirect("dashboard-admin.jsp?tab=opnam&msg=" + (success ? "approved" : "fail"));
+             } 
+             
+             else if("reject".equals(action)) {
+                 boolean success = dao.rejectOpnam(opnamID, user.getUserID());
+                 resp.sendRedirect("dashboard-admin.jsp?tab=opnam&msg=" + (success ? "rejected" : "fail"));
+             }
         }
     }
 }

@@ -15,6 +15,7 @@ public class SaleItem {
     private double subtotal; 
 
     public SaleItem(Product p, int qty) {
+        this.product = p;
         this.produkID = p.getProdukID();
         this.qty = qty;
         this.hargaSatuan = p.getHargaJual();
@@ -24,7 +25,7 @@ public class SaleItem {
     private Product product;
     
     public Product getProduct() {
-        return product;
+        return this.product;
     }
 
     public double getSubtotal() { 

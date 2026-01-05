@@ -15,15 +15,20 @@ public class Product {
     private double hargaBeli;
     private double hargaJual;
     private int stok;
+    private String kategoriNama; 
+    private int kategoriID; 
 
     public Product() {}
-    public Product(int id, String s, String n, double hb, double hj, int stok) {
+
+    public Product(int id, String s, String n, double hb, double hj, int stok, String katName, int katId) {
         this.produkID = id;
         this.sku = s;
         this.namaProduk = n;
         this.hargaBeli = hb;
         this.hargaJual = hj;
         this.stok = stok;
+        this.kategoriNama = katName;
+        this.kategoriID = katId;
     }
     
     public boolean updateHarga(double hargaBaru, Admin admin) {
@@ -33,18 +38,50 @@ public class Product {
         }
         return false;
     }
-
-    public void setSku(String s) { this.sku = s; }
-    public void setNamaProduk(String n) { this.namaProduk = n; }
-    public void setHargaBeli(double h) { this.hargaBeli = h; }
-    public void setHargaJual(double h) { this.hargaJual = h; }
-    public void setStok(int s) { this.stok = s; }
     
-    public int getProdukID() { return produkID; }
-    public String getSKU() { return sku; }
-    public String getNamaProduk() { return namaProduk; }
-    public int getStok() { return stok; }
-    public double getHargaJual() { return hargaJual; }
+    public Product(int id, String s, String n, double hb, double hj, int stok) {
+        this(id, s, n, hb, hj, stok, "-", 0);
+    }
+    
+    public String getKategori() { 
+        return (kategoriNama == null) ? "-" : kategoriNama; 
+    }
+    public void setKategori(String k) { this.kategoriNama = k; }
+    
+    public int getKategoriID() { return kategoriID; }
+    public void setKategoriID(int id) { this.kategoriID = id; }
+
+    public void setSku(String s) { 
+        this.sku = s; 
+    }
+    public void setNamaProduk(String n) { 
+        this.namaProduk = n; 
+    }
+    public void setHargaBeli(double h) { 
+        this.hargaBeli = h; 
+    }
+    public void setHargaJual(double h) { 
+        this.hargaJual = h; 
+    }
+    public void setStok(int s) { 
+        this.stok = s; 
+    }
+    
+    public int getProdukID() { 
+        return produkID; 
+    }
+    public String getSKU() { 
+        return sku; 
+    }
+    public String getNamaProduk() { 
+        return namaProduk; 
+    }
+    public int getStok() { 
+        return stok; 
+    }
+    public double getHargaJual() { 
+        return hargaJual; 
+    }
     
     @Override
     // Method ini menentukan apakah dua objek dianggap "SAMA" secara logika

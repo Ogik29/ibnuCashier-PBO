@@ -12,15 +12,16 @@ public class Category {
     private int kategoriID;
     private String namaKategori;
 
+    public Category(int id, String nama) {
+        this.kategoriID = id;
+        this.namaKategori = nama;
+    }
+
     public int getKategoriID() { 
         return kategoriID; 
     }
     
     public String getNamaKategori() { 
         return namaKategori; 
-    }
-    
-    public void setNamaKategori(String namaKategori) { 
-        this.namaKategori = namaKategori; 
     }
 }
