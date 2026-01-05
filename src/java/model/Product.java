@@ -15,48 +15,37 @@ public class Product {
     private double hargaBeli;
     private double hargaJual;
     private int stok;
-    
-    // Asosiasi
-    private Category category; 
 
     public Product() {}
-    public Product(int id, String sku, String name, double hb, double hj, int stok) {
+    public Product(int id, String s, String n, double hb, double hj, int stok) {
         this.produkID = id;
-        this.sku = sku;
-        this.namaProduk = name;
+        this.sku = s;
+        this.namaProduk = n;
         this.hargaBeli = hb;
         this.hargaJual = hj;
         this.stok = stok;
     }
-
-    // Methods
+    
     public boolean updateHarga(double hargaBaru, Admin admin) {
-        if(admin != null) {
+        if (admin != null) {
             this.hargaJual = hargaBaru;
             return true;
         }
         return false;
     }
-    
-    public int getProdukID() { 
-        return produkID; 
-    }
-    public String getSKU() { 
-        return sku; 
-    }
-    
-    public double getHargaJual() { 
-        return hargaJual; 
-    }
-    
-    public int getStok() { 
-        return stok; 
-    }
-    
-    public void setStok(int s) { 
-        this.stok = s; 
-    }
 
+    public void setSku(String s) { this.sku = s; }
+    public void setNamaProduk(String n) { this.namaProduk = n; }
+    public void setHargaBeli(double h) { this.hargaBeli = h; }
+    public void setHargaJual(double h) { this.hargaJual = h; }
+    public void setStok(int s) { this.stok = s; }
+    
+    public int getProdukID() { return produkID; }
+    public String getSKU() { return sku; }
+    public String getNamaProduk() { return namaProduk; }
+    public int getStok() { return stok; }
+    public double getHargaJual() { return hargaJual; }
+    
     @Override
     // Method ini menentukan apakah dua objek dianggap "SAMA" secara logika
     public boolean equals(Object o) {

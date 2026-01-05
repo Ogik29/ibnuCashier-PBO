@@ -8,9 +8,8 @@ package model;
  *
  * @author dimas
  */
-import java.sql.Timestamp;
 import java.util.List;
-import java.util.ArrayList;
+import java.sql.Timestamp;
 
 public class Transaction {
     private int transaksiID;
@@ -18,22 +17,22 @@ public class Transaction {
     private Timestamp waktu;
     private double total;
     private String metodeBayar;
-    private List<SaleItem> items; // Composition
+    protected List<SaleItem> items;
     private int kasirID;
 
     public double hitungTotal() {
-        double t = 0;
-        if (items != null) {
-            for (SaleItem i : items) {
-                t += i.getSubtotal();
-            }
-        }
-        this.total = t;
-        return t;
+        total = 0;
+        if(items != null) for(SaleItem i : items) total += i.getSubtotal();
+        return total;
     }
-
-    public void cetakStruk() {
-        System.out.println("Cetak Struk: " + noStruk + " Total: " + total);
+    public void cetakStruk() { System.out.println("Printing..." + noStruk); }
+    
+    public void setNoStruk(String s) { 
+        this.noStruk = s; 
+    }
+    
+    public void setKasirID(int id) { 
+        this.kasirID = id; 
     }
     
     public void setItems(List<SaleItem> items) { 
@@ -44,16 +43,8 @@ public class Transaction {
         return items; 
     }
     
-    public void setTotal(double total) { 
-        this.total = total; 
-    }
-    
     public double getTotal() { 
         return total; 
-    }
-    
-    public void setKasirID(int id) { 
-        this.kasirID = id; 
     }
     
     public int getKasirID() { 

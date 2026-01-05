@@ -8,28 +8,33 @@ package model;
  *
  * @author dimas
  */
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Arrays;
+import java.util.ArrayList;
 
 public class Kasir extends User {
-
-    public Kasir(int userID, String username, String passwordHash, boolean isActive) {
-        super(userID, username, passwordHash, "KASIR", isActive);
+    public Kasir(int id, String u, String p, boolean active) {
+        super(id, u, p, "KASIR", active);
     }
 
+    // Diagram behaviors
     public Transaction buatTransaksi(List<SaleItem> items) {
-        // Mengembalikan object Transaksi baru
         Transaction trx = new Transaction();
         trx.setItems(items);
-        trx.hitungTotal();
         return trx;
     }
 
     public boolean bacaFakturPusat(String noFaktur) { return true; }
+    
+    public StockOpnam buatDraftStokOpnam(List<StockOpnamItem> items) {
+        StockOpnam opnam = new StockOpnam();
+        opnam.setItems(items);
+        opnam.setKasirID_creator(this.userID);
+        return opnam; 
+    }
 
     @Override
     public List<String> getMenu(int userID) {
-        return Arrays.asList("POS (Kasir)", "Cek Stok", "Buat Stok Opnam");
+        return Arrays.asList("POS", "Cek Stok");
     }
 }

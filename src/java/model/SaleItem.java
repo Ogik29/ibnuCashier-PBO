@@ -12,19 +12,31 @@ public class SaleItem {
     private int produkID;
     private int qty;
     private double hargaSatuan;
-    private Product product; 
+    private double subtotal; 
 
     public SaleItem(Product p, int qty) {
-        this.product = p;
         this.produkID = p.getProdukID();
-        this.hargaSatuan = p.getHargaJual();
         this.qty = qty;
+        this.hargaSatuan = p.getHargaJual();
+        this.subtotal = qty * this.hargaSatuan;
     }
 
-    public double getSubtotal() {
-        return this.qty * this.hargaSatuan;
+    public double getSubtotal() { 
+        return qty * hargaSatuan; 
+    }
+
+    public void setProdukID(int id) { 
+        this.produkID = id; 
     }
     
+    public void setQty(int q) { 
+        this.qty = q; 
+    }
+    
+    public void setSubtotal(double s) { 
+        this.subtotal = s; 
+    }
+
     public int getProdukID() { 
         return produkID; 
     }
@@ -33,15 +45,7 @@ public class SaleItem {
         return qty; 
     }
     
-    public void setQty(int qty) { 
-        this.qty = qty; 
-    }
-    
     public double getHargaSatuan() { 
         return hargaSatuan; 
-    }
-    
-    public Product getProduct() { 
-        return product; 
     }
 }

@@ -13,7 +13,7 @@ import java.util.List;
 public abstract class User {
     protected int userID;
     protected String username;
-    private String passwordHash;
+    private String passwordHash; 
     protected String role;
     protected boolean isActive;
 
@@ -25,28 +25,14 @@ public abstract class User {
         this.isActive = isActive;
     }
 
-    public boolean login(String username, String password) {
-        return this.username.equals(username) && this.passwordHash.equals(password);
-    }
-    
-//    public void logout() { /* Logic logout handle session */ }
-    
-    public abstract List<String> getMenu(int userID);
+    public boolean login(String u, String p) { return true; /* implementasi di DAO/Auth Service */ }
+    public abstract List<String> getMenu(int userID); // Parameter int userID
 
-    // Getters & Setters
-    public int getUserID() { 
-        return userID; 
-    }
-    
-    public String getUsername() { 
-        return username; 
-    }
-    
-    public String getPasswordHash() { 
-        return passwordHash; 
-    }
-    
-    public String getRole() { 
-        return role; 
-    }
+    public void setUsername(String u) { this.username = u; }
+    public void setPasswordHash(String p) { this.passwordHash = p; }
+    public void setRole(String r) { this.role = r; }
+
+    public int getUserID() { return userID; }
+    public String getRole() { return role; }
+    public String getPasswordHash() { return passwordHash; }
 }
