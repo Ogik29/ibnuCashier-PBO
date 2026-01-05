@@ -4,77 +4,104 @@
     Author     : dimas
 --%>
 
-<%@page import="model.*, java.util.List"%>
+<%@ page import="model.*, java.util.List" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
-    // security check
-    User u = (User) session.getAttribute("user");
-    if(u == null) { 
-        response.sendRedirect("index.jsp"); 
-        return; 
+    User user = (User) session.getAttribute("user");
+    if(user == null || !(user instanceof Kasir)) {
+        response.sendRedirect("index.jsp"); return;
     }
-    
-    List<Produk> prods = (List<Produk>) request.getAttribute("listProduk");
-    List<SaleItem> carts = (List<SaleItem>) session.getAttribute("keranjang");
+    List<SaleItem> cart = (List<SaleItem>) session.getAttribute("cart");
 %>
 <!DOCTYPE html>
 <html>
-<head><title>POS Kasir</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"></head>
+<head>
+    <title>KASIR POS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
 <body>
-    <nav class="navbar navbar-dark bg-primary p-2 mb-3">
-        <span class="navbar-brand">Kasir: <%= u.getUsername() %></span>
-        <form action="auth" method="post" style="display:inline">
-            <input type="hidden" name="action" value="logout"><button class="btn btn-sm btn-light">Logout</button>
-        </form>
-    </nav>
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-8">
-                <h5>Katalog Produk</h5>
-                <div class="row">
-                    <% if(prods != null) for(Produk p : prods) { %>
-                    <div class="col-3 mb-2">
-                        <div class="card p-2">
-                            <b><%= p.getNamaProduk() %></b>
-                            <div>SKU: <%= p.getSKU() %></div>
-                            <div>Stok: <%= p.getStok() %></div>
-                            <div class="text-success fw-bold"><%= p.getHargaJual() %></div>
-                            <form action="pos" method="post">
-                                <input type="hidden" name="action" value="tambah">
-                                <input type="hidden" name="pid" value="<%= p.getProdukID() %>">
-                                <button class="btn btn-sm btn-success w-100 mt-2">Tambah</button>
-                            </form>
-                        </div>
-                    </div>
-                    <% } %>
-                </div>
-            </div>
-            <div class="col-4">
-                <div class="card">
-                    <div class="card-header bg-warning">Keranjang</div>
-                    <ul class="list-group list-group-flush">
-                        <% double grandTotal=0; 
-                           if(carts != null) for(SaleItem item : carts) { 
-                           grandTotal += item.getSubtotal(); %>
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span><%= item.getProdukRef().getNamaProduk() %> (x1)</span>
-                            <span><%= item.getSubtotal() %></span>
-                        </li>
-                        <% } %>
-                    </ul>
-                    <div class="card-footer">
-                        <h5>Total: <%= grandTotal %></h5>
-                        <form action="pos" method="post">
-                            <input type="hidden" name="action" value="checkout">
-                            <button class="btn btn-primary w-100">Bayar (CASH)</button>
-                        </form>
-                         <form action="pos" method="post" class="mt-2">
-                            <input type="hidden" name="action" value="clear">
-                            <button class="btn btn-sm btn-outline-secondary w-100">Reset</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+<nav class="navbar navbar-dark bg-primary px-4">
+    <span class="navbar-brand">KASIR: <%= user.getUsername() %></span>
+    <div>
+        <button class="btn btn-light btn-sm me-2" data-bs-toggle="modal" data-bs-target="#opnamModal">Buat Opnam</button>
+        <a href="auth?action=logout" class="btn btn-danger btn-sm">Logout</a>
+    </div>
+</nav>
+
+<div class="container mt-4 row">
+    <!-- Kiri: Form Scan -->
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h4>Scan Produk</h4>
+            <form action="PosServlet" method="post" autofocus>
+                <input type="hidden" name="action" value="scan">
+                <input type="text" name="sku" class="form-control form-control-lg mb-3" placeholder="Scan SKU Disini..." autofocus>
+                <button type="submit" class="btn btn-primary w-100">Tambahkan ke Keranjang</button>
+            </form>
+            
+            <% if(request.getParameter("msg")!=null && request.getParameter("msg").equals("success")) { %>
+                <div class="alert alert-success mt-3">Transaksi Berhasil Disimpan!</div>
+            <% } %>
         </div>
     </div>
+
+    <!-- Kanan: Keranjang -->
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h4>Keranjang Belanja</h4>
+            <table class="table">
+                <thead><tr><th>Nama</th><th>Qty</th><th>Harga</th><th>Subtotal</th></tr></thead>
+                <tbody>
+                <% 
+                    double grandTotal = 0;
+                    if(cart != null) {
+                        for(SaleItem item : cart) { 
+                            grandTotal += item.getSubtotal();
+                %>
+                        <tr>
+                            <td><%= item.getProduct().getNamaProduk() %></td>
+                            <td><%= item.getQty() %></td>
+                            <td><%= item.getHargaSatuan() %></td>
+                            <td><%= item.getSubtotal() %></td>
+                        </tr>
+                <%      } 
+                    } %>
+                </tbody>
+            </table>
+            <h3 class="text-end text-danger">Total: Rp <%= (int)grandTotal %></h3>
+            
+            <form action="PosServlet" method="post" class="mt-3">
+                <input type="hidden" name="action" value="checkout">
+                <button class="btn btn-success btn-lg w-100" <%= (cart==null||cart.isEmpty()) ? "disabled" : "" %>>BAYAR (CHECKOUT)</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Simple Stock Opnam Draft -->
+<div class="modal fade" id="opnamModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Buat Draft Opnam</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <form action="opnam" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="action" value="create_draft">
+                    <div class="alert alert-info">Masukkan SKU dan Jumlah Fisik (Manual Entry untuk Demo)</div>
+                    <!-- Simulasi 1 item dulu untuk demo -->
+                    <div class="input-group mb-2">
+                        <input type="text" name="sku" placeholder="SKU Barang" class="form-control" required>
+                        <input type="number" name="qty" placeholder="Fisik" class="form-control" required>
+                    </div>
+                     <!-- Bisa ditambah javascript dynamic form field -->
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-warning">Kirim ke Admin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

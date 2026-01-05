@@ -20,6 +20,12 @@ public class SaleItem {
         this.hargaSatuan = p.getHargaJual();
         this.subtotal = qty * this.hargaSatuan;
     }
+    
+    private Product product;
+    
+    public Product getProduct() {
+        return product;
+    }
 
     public double getSubtotal() { 
         return qty * hargaSatuan; 

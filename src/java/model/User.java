@@ -33,6 +33,7 @@ public abstract class User {
     public void setRole(String r) { this.role = r; }
 
     public int getUserID() { return userID; }
+    public String getUsername() { return username; }
     public String getRole() { return role; }
     public String getPasswordHash() { return passwordHash; }
 }

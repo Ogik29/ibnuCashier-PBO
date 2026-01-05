@@ -4,22 +4,31 @@
     Author     : dimas
 --%>
 
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
 <html>
 <head>
-    <title>IBNU Cashier Login</title>
+    <title>IBNU Cashier - Login</title>
+    <!-- Simple CSS for cleanliness -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="bg-dark d-flex justify-content-center align-items-center vh-100">
-    <div class="card p-4" style="width: 300px">
-        <h4 class="text-center">Login IBNU</h4>
+<body class="bg-light d-flex justify-content-center align-items-center" style="height:100vh;">
+    <div class="card p-4 shadow" style="width: 350px;">
+        <h3 class="text-center text-primary mb-3">IBNU Cashier</h3>
+        <% if(request.getParameter("error") != null) { %>
+            <div class="alert alert-danger">Username/Password Salah</div>
+        <% } %>
         <form action="auth" method="post">
-            <input type="hidden" name="action" value="login">
-            <div class="mb-2">Username: <input type="text" name="username" class="form-control" required></div>
-            <div class="mb-3">Password: <input type="password" name="password" class="form-control" required></div>
-            <button class="btn btn-primary w-100">Login</button>
+            <div class="mb-3">
+                <label>Username</label>
+                <input type="text" name="username" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Password</label>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">LOGIN</button>
         </form>
-        <% if(request.getParameter("err")!=null) out.print("<small class='text-danger'>User/Pass Salah!</small>"); %>
     </div>
 </body>
 </html>
