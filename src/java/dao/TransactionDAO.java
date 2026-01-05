@@ -12,41 +12,57 @@ import config.DatabaseConnection;
 import model.*;
 import java.sql.*;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+/**
+ *
+ * @author dimas
+ */
 public class TransactionDAO {
+
+    private static final Logger LOGGER = Logger.getLogger(TransactionDAO.class.getName());
 
     public boolean simpanTransaksi(Transaction trx) {
         Connection conn = null;
+        PreparedStatement psHead = null;
+        PreparedStatement psItem = null;
+        PreparedStatement psMove = null;
+        PreparedStatement psUpdate = null;
+        ResultSet rs = null;
+
         try {
             conn = DatabaseConnection.getConnection();
             conn.setAutoCommit(false); // START TRANSACTION
 
             // 1. Validasi & Kalkulasi Header
-            String noStruk = "STR-" + UUID.randomUUID().toString().substring(0,8);
-            trx.hitungTotal(); 
+            String noStruk = "STR-" + UUID.randomUUID().toString().substring(0, 8);
+            trx.hitungTotal();
 
             String sqlHeader = "INSERT INTO transactions (no_struk, total, kasir_id, metode_bayar) VALUES (?, ?, ?, 'CASH')";
-            PreparedStatement psHead = conn.prepareStatement(sqlHeader, Statement.RETURN_GENERATED_KEYS);
+            psHead = conn.prepareStatement(sqlHeader, Statement.RETURN_GENERATED_KEYS);
             psHead.setString(1, noStruk);
             psHead.setDouble(2, trx.getTotal());
             psHead.setInt(3, trx.getKasirID());
             psHead.executeUpdate();
 
             int trxID = 0;
-            ResultSet rs = psHead.getGeneratedKeys();
-            if (rs.next()) trxID = rs.getInt(1);
+            rs = psHead.getGeneratedKeys();
+            if (rs.next()) {
+                trxID = rs.getInt(1);
+            }
 
-            // 2. Loop Items
+            // 2. Persiapan Query Items & Stok
             String sqlItem = "INSERT INTO transaction_items (transaksi_id, produk_id, qty, harga_satuan, subtotal) VALUES (?,?,?,?,?)";
-            PreparedStatement psItem = conn.prepareStatement(sqlItem);
+            psItem = conn.prepareStatement(sqlItem);
 
             String sqlMove = "INSERT INTO stock_movements (produk_id, tipe_mutasi, qty_change, referensi_id, user_id) VALUES (?, ?, ?, ?, ?)";
-            PreparedStatement psMove = conn.prepareStatement(sqlMove);
+            psMove = conn.prepareStatement(sqlMove);
 
             String sqlUpdateStok = "UPDATE products SET stok = stok - ? WHERE produk_id = ?";
-            PreparedStatement psUpdate = conn.prepareStatement(sqlUpdateStok);
+            psUpdate = conn.prepareStatement(sqlUpdateStok);
 
-            for(SaleItem item : trx.getItems()) {
+            for (SaleItem item : trx.getItems()) {
                 // A. Simpan Item
                 psItem.setInt(1, trxID);
                 psItem.setInt(2, item.getProdukID());
@@ -73,11 +89,34 @@ public class TransactionDAO {
             return true;
 
         } catch (SQLException e) {
-            try { if(conn!=null) conn.rollback(); } catch(SQLException ex){}
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Gagal menyimpan transaksi: " + e.getMessage(), e);
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    LOGGER.log(Level.SEVERE, "Gagal Rollback", ex);
+                }
+            }
             return false;
         } finally {
-             try { if(conn!=null) conn.close(); } catch(SQLException ex){}
+            // Tutup resource manual karena struktur transaksi kompleks
+            closeQuietly(rs);
+            closeQuietly(psHead);
+            closeQuietly(psItem);
+            closeQuietly(psMove);
+            closeQuietly(psUpdate);
+            closeQuietly(conn);
+        }
+    }
+
+    // Helper untuk menutup resource agar rapi dan tidak nested try-catch berulang
+    private void closeQuietly(AutoCloseable resource) {
+        try {
+            if (resource != null) {
+                resource.close();
+            }
+        } catch (Exception e) {
+            // Ignored
         }
     }
 }
