@@ -13,11 +13,6 @@ import model.Admin;
 import model.Kasir;
 import model.User;
 import java.sql.*;
-import config.DatabaseConnection;
-import model.Admin;
-import model.Kasir;
-import model.User;
-import java.sql.*;
 import java.util.logging.Level;     // Tambahan Import
 import java.util.logging.Logger;    // Tambahan Import
 
