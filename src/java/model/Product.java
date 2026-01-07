@@ -67,6 +67,10 @@ public class Product {
         this.stok = s; 
     }
     
+    public void setProdukID(int p) {
+        this.produkID = p;
+    }
+    
     public int getProdukID() { 
         return produkID; 
     }

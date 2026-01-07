@@ -6,17 +6,22 @@ package controller;
 
 import dao.ProductDAO;
 import dao.TransactionDAO;
+import dao.PembelianDAO;
 import model.*;
 
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 @WebServlet("/PosServlet")
 public class PosServlet extends HttpServlet {
+    // Inisialisasi DAO
     ProductDAO productDAO = new ProductDAO();
     TransactionDAO transactionDAO = new TransactionDAO();
 
@@ -31,56 +36,69 @@ public class PosServlet extends HttpServlet {
             resp.sendRedirect("index.jsp");
             return;
         }
-        // Casting
+        // Casting ke tipe Kasir
         Kasir kasir = (Kasir) user;
 
         // 2. Ambil Keranjang
         List<SaleItem> cart = (List<SaleItem>) session.getAttribute("cart");
         if (cart == null) cart = new ArrayList<>();
 
-        // === LOGIKA BARU ADD ITEM (Dari List Produk) ===
+        // === LOGIKA ADD ITEM KE KERANJANG ===
         if ("add".equals(action)) {
             String sku = req.getParameter("sku");
+            
+            // Perbaikan: Ambil Qty dari input manual di pos.jsp
+            int qtyInput = 1;
+            try {
+                qtyInput = Integer.parseInt(req.getParameter("qty"));
+            } catch (Exception e) {
+                qtyInput = 1; // Default jika null/error
+            }
+
             Product p = productDAO.getBySku(sku);
 
             if (p != null) {
-                // Cek apakah stok habis sebelum masuk keranjang
+                // Cek stok awal
                 if (p.getStok() <= 0) {
                      resp.sendRedirect("pos.jsp?msg=failed");
                      return;
                 }
 
-                // Cek item sudah ada di keranjang?
                 boolean exist = false;
                 for (SaleItem item : cart) {
                     if (item.getProdukID() == p.getProdukID()) {
-                        // Cek lagi apakah tambah qty melebihi stok db?
-                        if(item.getQty() + 1 > p.getStok()) {
-                            // Stok tidak cukup untuk nambah lagi
-                            resp.sendRedirect("pos.jsp?msg=failed");
+                        // Cek apakah (qty saat ini + qty baru) melebihi stok?
+                        if(item.getQty() + qtyInput > p.getStok()) {
+                            resp.sendRedirect("pos.jsp?error=Stok%20tidak%20cukup");
                             return;
                         }
                         
-                        item.setQty(item.getQty() + 1);
+                        // Update Qty
+                        item.setQty(item.getQty() + qtyInput);
                         exist = true;
                         break;
                     }
                 }
-                // Jika belum ada, tambah baru
+                // Jika barang belum ada di keranjang
                 if (!exist) {
-                    cart.add(new SaleItem(p, 1));
+                    if (qtyInput > p.getStok()) {
+                        resp.sendRedirect("pos.jsp?error=Stok%20tidak%20cukup");
+                        return;
+                    }
+                    cart.add(new SaleItem(p, qtyInput));
                 }
             }
             session.setAttribute("cart", cart);
             resp.sendRedirect("pos.jsp");
-            
         } 
-        // === RESET KERANJANG ===
+        
+        // === LOGIKA RESET KERANJANG ===
         else if("reset".equals(action)) {
             session.removeAttribute("cart");
             resp.sendRedirect("pos.jsp");
         }
-        // === CHECKOUT (TRANSAKSI) ===
+        
+        // === LOGIKA CHECKOUT (TRANSAKSI) ===
         else if ("checkout".equals(action)) {
             if(cart.isEmpty()) {
                 resp.sendRedirect("pos.jsp?msg=empty");
@@ -90,12 +108,36 @@ public class PosServlet extends HttpServlet {
             Transaction trx = kasir.buatTransaksi(cart);
             trx.setKasirID(kasir.getUserID());
             
-            // Simpan ke DB
             if (transactionDAO.simpanTransaksi(trx)) {
-                session.removeAttribute("cart"); // Kosongkan cart jika sukses
+                session.removeAttribute("cart"); 
                 resp.sendRedirect("pos.jsp?msg=success");
             } else {
                 resp.sendRedirect("pos.jsp?msg=failed");
+            }
+        }
+        
+        // === LOGIKA RESTOCK (INPUT FAKTUR PEMBELIAN DARI KASIR) ===
+        else if ("input_restock_kasir".equals(action)) {
+            // Perbaikan: Gunakan 'req' bukan 'request'
+            String noFaktur = req.getParameter("noFaktur");
+            String sku = req.getParameter("sku");
+            int qty = 0;
+            double harga = 0;
+
+            try {
+                qty = Integer.parseInt(req.getParameter("qty"));
+                harga = Double.parseDouble(req.getParameter("hargaBeli"));
+            } catch (NumberFormatException e) {
+                resp.sendRedirect("pos.jsp?msg=restock_fail");
+                return;
+            }
+
+            PembelianDAO dao = new PembelianDAO();
+            // Perbaikan: gunakan user.getUserID() dan 'resp' bukan 'response'
+            if(dao.inputItemRestockKasir(noFaktur, sku, qty, harga, user.getUserID())) {
+                 resp.sendRedirect("pos.jsp?msg=restock_ok");
+            } else {
+                 resp.sendRedirect("pos.jsp?msg=restock_fail");
             }
         }
     }
