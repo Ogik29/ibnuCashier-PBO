@@ -13,21 +13,31 @@ import java.io.IOException;
 
 @WebServlet("/auth")
 public class AuthServlet extends HttpServlet {
-    UserDAO userDAO = new UserDAO();
+    
+    // Menggunakan private final untuk keamanan thread (Thread-safe)
+    private final UserDAO userDAO = new UserDAO();
 
+    @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String action = req.getParameter("action");
-        if("logout".equals(action)) {
-            req.getSession().invalidate();
+        if ("logout".equals(action)) {
+            // Menghapus session saat logout
+            req.getSession().invalidate(); 
+            // IOException ditangani otomatis oleh "throws IOException" di header method
             resp.sendRedirect("index.jsp");
         }
     }
 
+    @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         User user = userDAO.login(req.getParameter("username"), req.getParameter("password"));
-        if(user != null) {
+
+        if (user != null) {
+            // Syarat utama: Class 'User' di package model harus "implements Serializable"
             req.getSession().setAttribute("user", user);
-            if(user instanceof Admin) {
+
+            // Cek tipe user
+            if (user instanceof Admin) {
                 resp.sendRedirect("dashboard-admin.jsp");
             } else {
                 resp.sendRedirect("pos.jsp");

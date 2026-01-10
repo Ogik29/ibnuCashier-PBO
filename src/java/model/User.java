@@ -4,13 +4,17 @@
  */
 package model;
 import java.util.List;
+import java.io.Serializable;
 
 /**
  *
  * @author dimas
  */
 
-public abstract class User {
+public abstract class User implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
+     
     protected int userID;
     protected String username;
     private String passwordHash; 

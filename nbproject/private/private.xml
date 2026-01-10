@@ -9,6 +9,8 @@
             <file>file:/C:/Users/dimas/OneDrive/Documents/Materi%20Kuliah/Semester%205/Pemrograman%20Berorientasi%20Objek/web%20java/IbnuCashierTubes/src/java/dao/CategoryDAO.java</file>
             <file>file:/C:/Users/dimas/OneDrive/Documents/Materi%20Kuliah/Semester%205/Pemrograman%20Berorientasi%20Objek/web%20java/IbnuCashierTubes/src/java/controller/AuthServlet.java</file>
             <file>file:/C:/Users/dimas/OneDrive/Documents/Materi%20Kuliah/Semester%205/Pemrograman%20Berorientasi%20Objek/web%20java/IbnuCashierTubes/src/java/model/StockOpnam.java</file>
+            <file>file:/C:/Users/dimas/OneDrive/Documents/Materi%20Kuliah/Semester%205/Pemrograman%20Berorientasi%20Objek/web%20java/IbnuCashierTubes/src/java/dao/PembelianDAO.java</file>
+            <file>file:/C:/Users/dimas/OneDrive/Documents/Materi%20Kuliah/Semester%205/Pemrograman%20Berorientasi%20Objek/web%20java/IbnuCashierTubes/web/restock.jsp</file>
             <file>file:/C:/Users/dimas/OneDrive/Documents/Materi%20Kuliah/Semester%205/Pemrograman%20Berorientasi%20Objek/web%20java/IbnuCashierTubes/web/sales-history.jsp</file>
             <file>file:/C:/Users/dimas/OneDrive/Documents/Materi%20Kuliah/Semester%205/Pemrograman%20Berorientasi%20Objek/web%20java/IbnuCashierTubes/src/java/controller/PosServlet.java</file>
             <file>file:/C:/Users/dimas/OneDrive/Documents/Materi%20Kuliah/Semester%205/Pemrograman%20Berorientasi%20Objek/web%20java/IbnuCashierTubes/src/java/model/Product.java</file>
@@ -27,7 +29,9 @@
             <file>file:/C:/Users/dimas/OneDrive/Documents/Materi%20Kuliah/Semester%205/Pemrograman%20Berorientasi%20Objek/web%20java/IbnuCashierTubes/src/java/model/Category.java</file>
             <file>file:/C:/Users/dimas/OneDrive/Documents/Materi%20Kuliah/Semester%205/Pemrograman%20Berorientasi%20Objek/web%20java/IbnuCashierTubes/web/dashboard-admin.jsp</file>
             <file>file:/C:/Users/dimas/OneDrive/Documents/Materi%20Kuliah/Semester%205/Pemrograman%20Berorientasi%20Objek/web%20java/IbnuCashierTubes/src/java/model/User.java</file>
+            <file>file:/C:/Users/dimas/OneDrive/Documents/Materi%20Kuliah/Semester%205/Pemrograman%20Berorientasi%20Objek/web%20java/IbnuCashierTubes/web/kasir.jsp</file>
             <file>file:/C:/Users/dimas/OneDrive/Documents/Materi%20Kuliah/Semester%205/Pemrograman%20Berorientasi%20Objek/web%20java/IbnuCashierTubes/src/java/controller/ProductServlet.java</file>
+            <file>file:/C:/Users/dimas/OneDrive/Documents/Materi%20Kuliah/Semester%205/Pemrograman%20Berorientasi%20Objek/web%20java/IbnuCashierTubes/src/java/controller/ProsesTransaksiServlet.java</file>
             <file>file:/C:/Users/dimas/OneDrive/Documents/Materi%20Kuliah/Semester%205/Pemrograman%20Berorientasi%20Objek/web%20java/IbnuCashierTubes/src/java/model/Approvable.java</file>
             <file>file:/C:/Users/dimas/OneDrive/Documents/Materi%20Kuliah/Semester%205/Pemrograman%20Berorientasi%20Objek/web%20java/IbnuCashierTubes/src/java/dao/TransactionDAO.java</file>
             <file>file:/C:/Users/dimas/OneDrive/Documents/Materi%20Kuliah/Semester%205/Pemrograman%20Berorientasi%20Objek/web%20java/IbnuCashierTubes/src/java/dao/HistoryDAO.java</file>

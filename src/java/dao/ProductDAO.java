@@ -4,11 +4,10 @@
  */
 package dao;
 
-/**
- *
- * @author dimas
- */
-import config.DatabaseConnection;
+import config.DatabaseConnection; // Pastikan ini sesuai package DB Anda (util/config)
+// Jika di kode sebelumnya namanya 'util.DBConnection', sesuaikan baris di atas.
+// Asumsi sesuai snippet sebelumnya: import util.DBConnection;
+
 import model.Product;
 import java.sql.*;
 import java.util.ArrayList;
@@ -16,10 +15,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author dimas
- */
 public class ProductDAO {
 
     private static final Logger LOGGER = Logger.getLogger(ProductDAO.class.getName());
@@ -40,7 +35,7 @@ public class ProductDAO {
         }
         sql.append("ORDER BY p.nama_produk ASC");
 
-        try (Connection conn = DatabaseConnection.getConnection(); 
+        try (Connection conn = config.DatabaseConnection.getConnection(); 
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
             int idx = 1;
@@ -86,14 +81,17 @@ public class ProductDAO {
         return searchProducts(null, 0);
     }
 
+    // UPDATE: Menambahkan input STOK
     public boolean insertProduct(Product p, int catId) {
-        String sql = "INSERT INTO products(sku,nama_produk,harga_jual,kategori_id,stok,harga_beli) VALUES(?,?,?,?,0,0)";
-        try (Connection c = DatabaseConnection.getConnection(); 
+        // Default harga beli 0, stok sesuai input
+        String sql = "INSERT INTO products(sku,nama_produk,harga_jual,kategori_id,stok,harga_beli) VALUES(?,?,?,?,?,0)";
+        try (Connection c = config.DatabaseConnection.getConnection(); 
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, p.getSKU());
             ps.setString(2, p.getNamaProduk());
             ps.setDouble(3, p.getHargaJual());
             ps.setInt(4, catId);
+            ps.setInt(5, p.getStok()); // Input stok
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Gagal Insert Product", e);
@@ -101,14 +99,16 @@ public class ProductDAO {
         }
     }
 
+    // UPDATE: Update Product termasuk STOK
     public boolean updateProduct(Product p, int kategoriID) {
-        String sql = "UPDATE products SET nama_produk=?, harga_jual=?, kategori_id=? WHERE sku=?";
-        try (Connection conn = DatabaseConnection.getConnection(); 
+        String sql = "UPDATE products SET nama_produk=?, harga_jual=?, kategori_id=?, stok=? WHERE sku=?";
+        try (Connection conn = config.DatabaseConnection.getConnection(); 
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, p.getNamaProduk());
             ps.setDouble(2, p.getHargaJual());
             ps.setInt(3, kategoriID);
-            ps.setString(4, p.getSKU());
+            ps.setInt(4, p.getStok()); // Update Stok
+            ps.setString(5, p.getSKU());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Gagal Update Product", e);
@@ -117,12 +117,13 @@ public class ProductDAO {
     }
 
     public boolean deleteProduct(String sku) {
-        try (Connection c = DatabaseConnection.getConnection(); 
+        // Gunakan SKU
+        try (Connection c = config.DatabaseConnection.getConnection(); 
              PreparedStatement ps = c.prepareStatement("DELETE FROM products WHERE sku=?")) {
             ps.setString(1, sku);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Gagal Delete Product", e);
+            LOGGER.log(Level.SEVERE, "Gagal Delete Product. Mungkin produk sudah dipakai di transaksi.", e);
             return false;
         }
     }
