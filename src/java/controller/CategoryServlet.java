@@ -7,24 +7,60 @@ package controller;
 import dao.CategoryDAO;
 import model.Admin;
 import model.User;
+import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @WebServlet("/category")
 public class CategoryServlet extends HttpServlet {
-    CategoryDAO dao = new CategoryDAO();
+    
+    private static final Logger LOGGER = Logger.getLogger(CategoryServlet.class.getName());
+    private final CategoryDAO dao = new CategoryDAO();
 
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        User user = (User) req.getSession().getAttribute("user");
-        if(user == null || !(user instanceof Admin)) { resp.sendRedirect("index.jsp"); return; }
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // Ambil session
+        HttpSession session = req.getSession(false); 
+        User user = (session != null) ? (User) session.getAttribute("user") : null;
+        
+        // Validasi: Hanya Admin yang boleh akses
+        if(user == null || !(user instanceof Admin)) { 
+            try {
+                // FIX: Membungkus sendRedirect dalam try-catch untuk memenuhi aturan Sonar
+                resp.sendRedirect("index.jsp"); 
+            } catch (IOException e) {
+                // Mencatat error tanpa menghentikan logic secara paksa
+                LOGGER.log(Level.SEVERE, "Gagal melakukan redirect ke halaman login", e);
+            }
+            return; 
+        }
 
         String action = req.getParameter("action");
-        if("add".equals(action)) {
-            dao.add(req.getParameter("nama"));
-        } else if("delete".equals(action)) {
-            dao.delete(Integer.parseInt(req.getParameter("id")));
+        
+        try {
+            if("add".equals(action)) {
+                String nama = req.getParameter("nama");
+                if (nama != null && !nama.trim().isEmpty()) {
+                    dao.add(nama);
+                }
+            } else if("delete".equals(action)) {
+                String idParam = req.getParameter("id");
+                if (idParam != null && !idParam.isEmpty()) {
+                    dao.delete(Integer.parseInt(idParam));
+                }
+            }
+        } catch (NumberFormatException e) {
+            LOGGER.log(Level.WARNING, "Format ID Kategori tidak valid saat operasi: " + action, e);
         }
-        resp.sendRedirect("dashboard-admin.jsp?tab=kategori");
+        
+        try {
+            // FIX: Handle redirect akhir juga dengan try-catch
+            resp.sendRedirect("dashboard-admin.jsp?tab=kategori");
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Gagal redirect kembali ke dashboard admin", e);
+        }
     }
 }

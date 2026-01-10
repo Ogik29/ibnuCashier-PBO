@@ -10,8 +10,12 @@ package model;
  */
 import java.sql.Timestamp;
 import java.util.List;
+import java.io.Serializable;
 
-public class FakturPembelian implements Approvable {
+public class FakturPembelian implements Approvable, Serializable {
+    
+    private static final long serialVersionUID = 1L;
+    
     private int fakturID;
     private String noFaktur;
     private Timestamp waktu;

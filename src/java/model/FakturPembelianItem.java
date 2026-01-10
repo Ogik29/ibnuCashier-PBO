@@ -8,7 +8,9 @@ package model;
  *
  * @author dimas
  */
-public class FakturPembelianItem {
+import java.io.Serializable;
+
+public class FakturPembelianItem implements Serializable {
     private int produkID;
     private int qty;
     private double hargaBeliSatuan;

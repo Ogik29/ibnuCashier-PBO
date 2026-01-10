@@ -11,37 +11,61 @@ import model.User;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 
 @WebServlet("/product")
 public class ProductServlet extends HttpServlet {
-    ProductDAO dao = new ProductDAO();
+    
+    // 1. Inisialisasi Logger
+    private static final Logger LOGGER = Logger.getLogger(ProductServlet.class.getName());
+
+    // 2. Private final untuk keamanan thread
+    private final ProductDAO dao = new ProductDAO();
 
     // MENANGANI LINK DELETE (GET REQUEST)
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        User user = (User) req.getSession().getAttribute("user");
-        if(user == null || !(user instanceof Admin)) { resp.sendRedirect("index.jsp"); return; }
+        // Ambil session dan cek login
+        HttpSession session = req.getSession(false);
+        User user = (session != null) ? (User) session.getAttribute("user") : null;
+        
+        if (user == null || !(user instanceof Admin)) { 
+            safeRedirect(resp, "index.jsp");
+            return; 
+        }
         
         String action = req.getParameter("action");
-        if("delete".equals(action)) {
+        if ("delete".equals(action)) {
             String sku = req.getParameter("sku");
-            if(dao.deleteProduct(sku)) {
-                resp.sendRedirect("dashboard-admin.jsp?tab=produk&msg=deleted");
+            
+            // Validasi SKU tidak boleh null
+            if (sku != null && !sku.trim().isEmpty()) {
+                if (dao.deleteProduct(sku)) {
+                    safeRedirect(resp, "dashboard-admin.jsp?tab=produk&msg=deleted");
+                } else {
+                    safeRedirect(resp, "dashboard-admin.jsp?tab=produk&msg=fail_delete");
+                }
             } else {
-                resp.sendRedirect("dashboard-admin.jsp?tab=produk&msg=fail_delete");
+                 safeRedirect(resp, "dashboard-admin.jsp?tab=produk&msg=invalid_id");
             }
         } else {
              // Jika bukan delete, kembalikan ke dashboard
-             resp.sendRedirect("dashboard-admin.jsp");
+             safeRedirect(resp, "dashboard-admin.jsp");
         }
     }
 
     // MENANGANI FORM TAMBAH & UPDATE (POST REQUEST)
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        User user = (User) req.getSession().getAttribute("user");
-        if(user == null || !(user instanceof Admin)) { resp.sendRedirect("index.jsp"); return; }
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        HttpSession session = req.getSession(false);
+        User user = (session != null) ? (User) session.getAttribute("user") : null;
+        
+        if (user == null || !(user instanceof Admin)) { 
+            safeRedirect(resp, "index.jsp");
+            return; 
+        }
 
         String action = req.getParameter("action");
         
@@ -55,12 +79,17 @@ public class ProductServlet extends HttpServlet {
         int katID = 1;
         
         try {
-            harga = Double.parseDouble(req.getParameter("harga"));
-            // Ambil Parameter STOK yang baru ditambahkan
-            stok = Integer.parseInt(req.getParameter("stok")); 
-            katID = Integer.parseInt(req.getParameter("kategori_id"));
-        } catch (Exception e) {
-            resp.sendRedirect("dashboard-admin.jsp?tab=produk&msg=invalid_input");
+            String hargaParam = req.getParameter("harga");
+            String stokParam = req.getParameter("stok");
+            String katParam = req.getParameter("kategori_id");
+            
+            // Cek null sebelum parsing
+            if (hargaParam != null) harga = Double.parseDouble(hargaParam);
+            if (stokParam != null) stok = Integer.parseInt(stokParam);
+            if (katParam != null) katID = Integer.parseInt(katParam);
+            
+        } catch (NumberFormatException e) {
+            safeRedirect(resp, "dashboard-admin.jsp?tab=produk&msg=invalid_input");
             return;
         }
 
@@ -68,20 +97,34 @@ public class ProductServlet extends HttpServlet {
         p.setSku(sku); 
         p.setNamaProduk(nama); 
         p.setHargaJual(harga);
-        p.setStok(stok); // Set stok ke model
+        p.setStok(stok); 
 
-        if("add".equals(action)) {
-            if(dao.insertProduct(p, katID)){
-                resp.sendRedirect("dashboard-admin.jsp?tab=produk&msg=saved");
+        if ("add".equals(action)) {
+            if (dao.insertProduct(p, katID)){
+                safeRedirect(resp, "dashboard-admin.jsp?tab=produk&msg=saved");
             } else {
-                resp.sendRedirect("dashboard-admin.jsp?tab=produk&msg=err_sku_duplicate");
+                safeRedirect(resp, "dashboard-admin.jsp?tab=produk&msg=err_sku_duplicate");
             }
-        } else if("update".equals(action)) {
-            if(dao.updateProduct(p, katID)) {
-                resp.sendRedirect("dashboard-admin.jsp?tab=produk&msg=updated");
+        } else if ("update".equals(action)) {
+            if (dao.updateProduct(p, katID)) {
+                safeRedirect(resp, "dashboard-admin.jsp?tab=produk&msg=updated");
             } else {
-                resp.sendRedirect("dashboard-admin.jsp?tab=produk&msg=err_update");
+                safeRedirect(resp, "dashboard-admin.jsp?tab=produk&msg=err_update");
             }
+        } else {
+            safeRedirect(resp, "dashboard-admin.jsp");
+        }
+    }
+
+    /**
+     * Helper Method untuk menangani "Handle exception" pada sendRedirect.
+     * Mencegah duplikasi try-catch di logic utama.
+     */
+    private void safeRedirect(HttpServletResponse resp, String url) {
+        try {
+            resp.sendRedirect(url);
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Gagal redirect ke: " + url, e);
         }
     }
 }

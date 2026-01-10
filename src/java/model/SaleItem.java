@@ -8,7 +8,11 @@ package model;
  *
  * @author dimas
  */
-public class SaleItem {
+import java.io.Serializable;
+
+public class SaleItem implements Serializable { 
+    private static final long serialVersionUID = 1L;
+    
     private int produkID;
     private int qty;
     private double hargaSatuan;

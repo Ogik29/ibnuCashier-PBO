@@ -10,11 +10,16 @@ import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @WebServlet("/auth")
 public class AuthServlet extends HttpServlet {
     
-    // Menggunakan private final untuk keamanan thread (Thread-safe)
+    // 1. Inisialisasi Logger
+    private static final Logger LOGGER = Logger.getLogger(AuthServlet.class.getName());
+
+    // 2. Private final untuk keamanan thread (Thread-safe)
     private final UserDAO userDAO = new UserDAO();
 
     @Override
@@ -23,8 +28,9 @@ public class AuthServlet extends HttpServlet {
         if ("logout".equals(action)) {
             // Menghapus session saat logout
             req.getSession().invalidate(); 
-            // IOException ditangani otomatis oleh "throws IOException" di header method
-            resp.sendRedirect("index.jsp");
+            
+            // FIX: Gunakan safeRedirect untuk menangani IOException
+            safeRedirect(resp, "index.jsp");
         }
     }
 
@@ -33,17 +39,30 @@ public class AuthServlet extends HttpServlet {
         User user = userDAO.login(req.getParameter("username"), req.getParameter("password"));
 
         if (user != null) {
-            // Syarat utama: Class 'User' di package model harus "implements Serializable"
+            // Syarat: Pastikan class 'User' implements Serializable di package model
             req.getSession().setAttribute("user", user);
 
-            // Cek tipe user
+            // Cek tipe user & redirect aman
             if (user instanceof Admin) {
-                resp.sendRedirect("dashboard-admin.jsp");
+                safeRedirect(resp, "dashboard-admin.jsp");
             } else {
-                resp.sendRedirect("pos.jsp");
+                safeRedirect(resp, "pos.jsp");
             }
         } else {
-            resp.sendRedirect("index.jsp?error=invalid");
+            safeRedirect(resp, "index.jsp?error=invalid");
+        }
+    }
+
+    /**
+     * Helper Method untuk menangani "Handle the following exception: IOException"
+     * Membungkus logic sendRedirect dalam try-catch agar kode utama tetap bersih.
+     */
+    private void safeRedirect(HttpServletResponse resp, String location) {
+        try {
+            resp.sendRedirect(location);
+        } catch (IOException e) {
+            // Mencatat log error jika redirect gagal (misal koneksi putus)
+            LOGGER.log(Level.SEVERE, "Gagal redirect ke halaman: " + location, e);
         }
     }
 }

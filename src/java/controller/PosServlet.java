@@ -12,6 +12,8 @@ import model.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -21,9 +23,14 @@ import javax.servlet.http.HttpSession;
 
 @WebServlet("/PosServlet")
 public class PosServlet extends HttpServlet {
-    // Inisialisasi DAO
-    ProductDAO productDAO = new ProductDAO();
-    TransactionDAO transactionDAO = new TransactionDAO();
+    
+    // 1. Logger untuk mencatat error redirect
+    private static final Logger LOGGER = Logger.getLogger(PosServlet.class.getName());
+    
+    // FIX 1: Jadikan 'private final' agar Thread-Safe (aman untuk banyak user)
+    private final ProductDAO productDAO = new ProductDAO();
+    private final TransactionDAO transactionDAO = new TransactionDAO();
+    private final PembelianDAO pembelianDAO = new PembelianDAO();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -33,9 +40,10 @@ public class PosServlet extends HttpServlet {
         // 1. Validasi User Login (Keamanan)
         User user = (User) session.getAttribute("user");
         if (user == null || !(user instanceof Kasir)) {
-            resp.sendRedirect("index.jsp");
+            safeRedirect(resp, "index.jsp");
             return;
         }
+        
         // Casting ke tipe Kasir
         Kasir kasir = (Kasir) user;
 
@@ -47,29 +55,30 @@ public class PosServlet extends HttpServlet {
         if ("add".equals(action)) {
             String sku = req.getParameter("sku");
             
-            // Perbaikan: Ambil Qty dari input manual di pos.jsp
+            // Ambil Qty dari input manual
             int qtyInput = 1;
             try {
                 qtyInput = Integer.parseInt(req.getParameter("qty"));
-            } catch (Exception e) {
-                qtyInput = 1; // Default jika null/error
+            } catch (NumberFormatException e) {
+                qtyInput = 1; 
             }
 
             Product p = productDAO.getBySku(sku);
 
             if (p != null) {
-                // Cek stok awal
+                // Cek stok awal di database
                 if (p.getStok() <= 0) {
-                     resp.sendRedirect("pos.jsp?msg=failed");
+                     safeRedirect(resp, "pos.jsp?msg=failed");
                      return;
                 }
 
                 boolean exist = false;
                 for (SaleItem item : cart) {
                     if (item.getProdukID() == p.getProdukID()) {
-                        // Cek apakah (qty saat ini + qty baru) melebihi stok?
+                        // Cek apakah stok cukup jika ditambah qty baru
                         if(item.getQty() + qtyInput > p.getStok()) {
-                            resp.sendRedirect("pos.jsp?error=Stok%20tidak%20cukup");
+                            // FIX: Menggunakan safeRedirect agar try-catch terpusat
+                            safeRedirect(resp, "pos.jsp?error=Stok%20tidak%20cukup");
                             return;
                         }
                         
@@ -79,29 +88,32 @@ public class PosServlet extends HttpServlet {
                         break;
                     }
                 }
+                
                 // Jika barang belum ada di keranjang
                 if (!exist) {
                     if (qtyInput > p.getStok()) {
-                        resp.sendRedirect("pos.jsp?error=Stok%20tidak%20cukup");
+                        safeRedirect(resp, "pos.jsp?error=Stok%20tidak%20cukup");
                         return;
                     }
+                    // Tambah item baru
                     cart.add(new SaleItem(p, qtyInput));
                 }
             }
+            // Simpan update ke session
             session.setAttribute("cart", cart);
-            resp.sendRedirect("pos.jsp");
+            safeRedirect(resp, "pos.jsp");
         } 
         
         // === LOGIKA RESET KERANJANG ===
         else if("reset".equals(action)) {
             session.removeAttribute("cart");
-            resp.sendRedirect("pos.jsp");
+            safeRedirect(resp, "pos.jsp");
         }
         
         // === LOGIKA CHECKOUT (TRANSAKSI) ===
         else if ("checkout".equals(action)) {
             if(cart.isEmpty()) {
-                resp.sendRedirect("pos.jsp?msg=empty");
+                safeRedirect(resp, "pos.jsp?msg=empty");
                 return;
             }
 
@@ -110,15 +122,14 @@ public class PosServlet extends HttpServlet {
             
             if (transactionDAO.simpanTransaksi(trx)) {
                 session.removeAttribute("cart"); 
-                resp.sendRedirect("pos.jsp?msg=success");
+                safeRedirect(resp, "pos.jsp?msg=success");
             } else {
-                resp.sendRedirect("pos.jsp?msg=failed");
+                safeRedirect(resp, "pos.jsp?msg=failed");
             }
         }
         
         // === LOGIKA RESTOCK (INPUT FAKTUR PEMBELIAN DARI KASIR) ===
         else if ("input_restock_kasir".equals(action)) {
-            // Perbaikan: Gunakan 'req' bukan 'request'
             String noFaktur = req.getParameter("noFaktur");
             String sku = req.getParameter("sku");
             int qty = 0;
@@ -128,17 +139,27 @@ public class PosServlet extends HttpServlet {
                 qty = Integer.parseInt(req.getParameter("qty"));
                 harga = Double.parseDouble(req.getParameter("hargaBeli"));
             } catch (NumberFormatException e) {
-                resp.sendRedirect("pos.jsp?msg=restock_fail");
+                safeRedirect(resp, "pos.jsp?msg=restock_fail");
                 return;
             }
-
-            PembelianDAO dao = new PembelianDAO();
-            // Perbaikan: gunakan user.getUserID() dan 'resp' bukan 'response'
-            if(dao.inputItemRestockKasir(noFaktur, sku, qty, harga, user.getUserID())) {
-                 resp.sendRedirect("pos.jsp?msg=restock_ok");
+            
+            if(pembelianDAO.inputItemRestockKasir(noFaktur, sku, qty, harga, user.getUserID())) {
+                 safeRedirect(resp, "pos.jsp?msg=restock_ok");
             } else {
-                 resp.sendRedirect("pos.jsp?msg=restock_fail");
+                 safeRedirect(resp, "pos.jsp?msg=restock_fail");
             }
+        }
+    }
+
+    /**
+     * Helper method untuk menangani Exception IOException saat Redirect
+     * Method ini memuaskan requirement "Handle exception" tanpa mengotori logic utama
+     */
+    private void safeRedirect(HttpServletResponse resp, String url) {
+        try {
+            resp.sendRedirect(url);
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Gagal redirect ke: " + url, e);
         }
     }
 }
